@@ -1,0 +1,21 @@
+# Trade Bot V1.4 - Python Dependencies
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# IQ Option API (optional for dashboard-only deployment)
+iqoptionapi>=0.5
+
+# Configuration
+python-dotenv>=1.0.0
+
+# UI/Display (Console)
+rich>=13.5.0
+
+# Web Dashboard
+streamlit>=1.29.0
+plotly>=5.18.0
+
+# Technical Analysis (for backtesting)
+ta>=0.11.0

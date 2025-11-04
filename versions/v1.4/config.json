@@ -1,0 +1,166 @@
+{
+  "version": "1.4",
+  "description": "Multi-Currency Support with individual parameters per pair",
+
+  "capital": 100,
+  "amount": 1,
+  "payout": 0.8,
+
+  "risk": {
+    "stop_loss": 5,
+    "daily_loss_limit": 5,
+    "max_trades_per_day": 50
+  },
+
+  "currencies": {
+    "EURUSD": {
+      "enabled": true,
+      "trading_hours": {
+        "start": 19,
+        "end": 3
+      },
+      "session_filters": {
+        "19-21": "put",
+        "22-2": "call"
+      },
+      "indicators": {
+        "adx_min": 8,
+        "macd_min": 0.0005,
+        "price_ema_max": 0.005,
+        "ema_period": 20
+      },
+      "comment": "Buck Regular - ตลาดเปิด 19:00-03:00, session กว้างกว่า OTC"
+    },
+
+    "EURUSD-OTC": {
+      "enabled": true,
+      "trading_hours": {
+        "start": 0,
+        "end": 23
+      },
+      "session_filters": {
+        "12-13": "put",
+        "18-18": "call"
+      },
+      "indicators": {
+        "adx_min": 8,
+        "macd_min": 0.0005,
+        "price_ema_max": 0.005,
+        "ema_period": 20
+      },
+      "comment": "Buck OTC - session แคบ (12-13 PUT, 18 CALL) ให้ Win Rate ดีกว่า"
+    },
+
+    "EURGBP": {
+      "enabled": false,
+      "trading_hours": {
+        "start": 14,
+        "end": 22
+      },
+      "session_filters": {
+        "15-16": "put",
+        "20-20": "call"
+      },
+      "indicators": {
+        "adx_min": 15,
+        "macd_min": 0.001,
+        "price_ema_max": 0.003,
+        "ema_period": 20
+      },
+      "comment": "Cable - DISABLED (0 trades, too strict)"
+    },
+
+    "EURJPY": {
+      "enabled": false,
+      "trading_hours": {
+        "start": 6,
+        "end": 14
+      },
+      "session_filters": {
+        "12-13": "put"
+      },
+      "indicators": {
+        "adx_min": 18,
+        "macd_min": 0.0012,
+        "price_ema_max": 0.0025,
+        "ema_period": 25
+      },
+      "comment": "Yen - DISABLED (win rate < 55%, always loss)"
+    },
+
+    "EURCHF": {
+      "enabled": false,
+      "trading_hours": {
+        "start": 13,
+        "end": 21
+      },
+      "session_filters": {
+        "14-16": "put",
+        "18-20": "call"
+      },
+      "indicators": {
+        "adx_min": 6,
+        "macd_min": 0.0003,
+        "price_ema_max": 0.002,
+        "ema_period": 15
+      },
+      "comment": "Swissy - DISABLED (0 trades, too strict)"
+    },
+
+    "EURCAD": {
+      "enabled": true,
+      "trading_hours": {
+        "start": 19,
+        "end": 3
+      },
+      "session_filters": {
+        "20-22": "put",
+        "1-2": "call"
+      },
+      "indicators": {
+        "adx_min": 9,
+        "macd_min": 0.0006,
+        "price_ema_max": 0.004,
+        "ema_period": 20
+      },
+      "comment": "Loonie - คล้าย USD แต่ผันผวนกว่าเล็กน้อย"
+    },
+
+    "EURAUD": {
+      "enabled": false,
+      "trading_hours": {
+        "start": 5,
+        "end": 12
+      },
+      "session_filters": {
+        "6-8": "put",
+        "10-11": "call"
+      },
+      "indicators": {
+        "adx_min": 11,
+        "macd_min": 0.0007,
+        "price_ema_max": 0.0045,
+        "ema_period": 22
+      },
+      "comment": "Aussie - DISABLED (40% win rate, -17% loss)"
+    }
+  },
+
+  "default_indicators": {
+    "adx_min": 8,
+    "macd_min": 0.0005,
+    "price_ema_max": 0.005,
+    "ema_period": 20,
+    "rsi_period": 14,
+    "bollinger_period": 20,
+    "bollinger_std": 2
+  },
+
+  "notes": [
+    "v1.4: Multi-currency support",
+    "Each currency pair has its own parameters",
+    "Trading hours based on market characteristics",
+    "Session filters optimized per pair",
+    "EURUSD remains the most reliable pair"
+  ]
+}
