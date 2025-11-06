@@ -21,13 +21,31 @@ import json
 import numpy as np
 import sys
 
-# เช็คโหมดจาก command line arguments
+# เช็คโหมดจาก command line arguments และ query parameters
 MODE = "live"  # default
+
+# 1. เช็คจาก command line (สำหรับ local: streamlit run dashboard.py -- --mode=test)
 if len(sys.argv) > 1:
     for arg in sys.argv[1:]:
         if arg.startswith("--mode="):
             MODE = arg.split("=")[1]
             break
+
+# 2. เช็คจาก query parameter (สำหรับ browser: ?mode=test)
+# ใช้ได้ทั้ง st.query_params (Streamlit >= 1.30) และ st.experimental_get_query_params (เก่า)
+try:
+    # Try new API first (Streamlit >= 1.30)
+    if hasattr(st, 'query_params'):
+        query_mode = st.query_params.get("mode", None)
+        if query_mode:
+            MODE = query_mode
+    # Fallback to old API
+    elif hasattr(st, 'experimental_get_query_params'):
+        query_params = st.experimental_get_query_params()
+        if "mode" in query_params:
+            MODE = query_params["mode"][0]
+except:
+    pass  # ถ้าเกิด error ใช้ค่า default
 
 # Page config
 st.set_page_config(
