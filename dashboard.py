@@ -710,6 +710,7 @@ if 'selected_trade_id' in st.session_state:
 
         # Load real candles from CSV data
         trade_time = selected_trade['time']
+        pair = selected_trade.get('pair', 'EURUSD')
 
         # Try to load candles from CSV file
         candles_loaded = False
@@ -747,8 +748,53 @@ if 'selected_trade_id' in st.session_state:
                     })
                 candles_loaded = True
 
+        # If still no data (e.g., in TEST mode), generate mock candles
+        if not candles_loaded:
+            st.info("📊 Generating mock candles for demonstration (Test Mode)")
+
+            # Generate 50 realistic mock candles
+            base_price = 1.08000  # EURUSD typical price
+            current_price = base_price
+            mock_candles = []
+
+            # Start from 50 minutes before trade time
+            start_time = trade_time - timedelta(minutes=50)
+
+            for i in range(50):
+                candle_time = start_time + timedelta(minutes=i)
+
+                # Random price movement
+                price_change = np.random.normal(0, 0.0002)  # Small realistic movements
+                open_price = current_price
+                close_price = current_price + price_change
+
+                # High/Low with small spreads
+                high_price = max(open_price, close_price) + abs(np.random.normal(0, 0.0001))
+                low_price = min(open_price, close_price) - abs(np.random.normal(0, 0.0001))
+
+                volume = np.random.randint(50, 200)
+
+                mock_candles.append({
+                    'time': candle_time.timestamp(),
+                    'open': open_price,
+                    'high': high_price,
+                    'low': low_price,
+                    'close': close_price,
+                    'volume': volume
+                })
+
+                current_price = close_price
+
+            candles = mock_candles
+            candles_loaded = True
+
         if candles_loaded and len(candles) > 0:
-                st.success(f"✅ Loaded {len(candles)} REAL candles from IQ Option historical data")
+                # Check if it's mock or real data
+                if not os.path.exists(candle_file) and not os.path.exists("data/EURUSD_1m_30d.csv"):
+                    # Mock data
+                    pass  # Info message already shown above
+                else:
+                    st.success(f"✅ Loaded {len(candles)} REAL candles from IQ Option historical data")
 
                 # Extract data
                 timestamps = [datetime.fromtimestamp(c['time']) for c in candles]

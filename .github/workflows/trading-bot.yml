@@ -1,0 +1,76 @@
+name: Trading Bot V1.4
+
+on:
+  # รันทุก 30 นาที (เฉพาะช่วงเวลาที่ bot ควรเทรด)
+  schedule:
+    # 12:00-13:59 UTC (PUT session for EURUSD-OTC)
+    - cron: '0,30 12-13 * * *'
+    # 18:00-18:59 UTC (CALL session for EURUSD-OTC)
+    - cron: '0,30 18 * * *'
+    # 19:00-02:59 UTC (EURUSD and EURCAD sessions)
+    - cron: '0,30 19-23 * * *'
+    - cron: '0,30 0-2 * * *'
+
+  # Manual trigger
+  workflow_dispatch:
+
+jobs:
+  trade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10  # จำกัดแต่ละรันไม่เกิน 10 นาที
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install iqoptionapi pandas numpy ta python-dotenv
+
+      - name: Run trading bot
+        env:
+          IQ_EMAIL: ${{ secrets.IQ_EMAIL }}
+          IQ_PASSWORD: ${{ secrets.IQ_PASSWORD }}
+          IQ_MODE: ${{ secrets.IQ_MODE }}
+        run: |
+          python bot_v1.4.py
+        timeout-minutes: 8
+
+      - name: Commit and push trades
+        if: always()  # รันแม้ว่า bot จะ fail
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "Trading Bot"
+
+          # Check if trades.csv changed
+          if [[ -f trades.csv ]]; then
+            git add trades.csv
+
+            # Only commit if there are changes
+            if git diff --staged --quiet; then
+              echo "No changes to commit"
+            else
+              git commit -m "Bot: Update trades.csv - $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+              git push
+            fi
+          else
+            echo "No trades.csv file found"
+          fi
+
+      - name: Upload logs as artifact
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: bot-logs-${{ github.run_number }}
+          path: |
+            bot.log
+            trades.csv
+          retention-days: 7
