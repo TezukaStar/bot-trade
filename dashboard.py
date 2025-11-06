@@ -130,9 +130,11 @@ def load_trades():
                     df = pd.read_csv(filepath)
                     if not df.empty:
                         # ดึงชื่อคู่เงินจากชื่อไฟล์ (เช่น v1.4_EURUSD_1m_30d.csv -> EURUSD)
-                        filename = os.path.basename(filepath)
-                        pair = filename.replace("v1.4_", "").replace("_1m_30d.csv", "")
-                        df['pair'] = pair  # เพิ่มคอลัมน์คู่เงิน
+                        # แต่ถ้ามีคอลัมน์ pair อยู่แล้ว ไม่ต้อง overwrite
+                        if 'pair' not in df.columns:
+                            filename = os.path.basename(filepath)
+                            pair = filename.replace("v1.4_", "").replace("_1m_30d.csv", "")
+                            df['pair'] = pair  # เพิ่มคอลัมน์คู่เงิน
                         all_dfs.append(df)
                 except:
                     continue
