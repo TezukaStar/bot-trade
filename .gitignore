@@ -9,6 +9,10 @@ __pycache__/
 .venv
 *.env
 
+# Trading Data
+trades.csv
+*.csv.bak
+
 # Streamlit
 .streamlit/secrets.toml
 
