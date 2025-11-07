@@ -49,19 +49,16 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "Trading Bot"
 
-          # Check if trades.csv changed
-          if [[ -f trades.csv ]]; then
-            git add trades.csv
+          # Add files to git
+          [[ -f trades.csv ]] && git add trades.csv
+          [[ -f last_run.txt ]] && git add last_run.txt
 
-            # Only commit if there are changes
-            if git diff --staged --quiet; then
-              echo "No changes to commit"
-            else
-              git commit -m "Bot: Update trades.csv - $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-              git push
-            fi
+          # Only commit if there are changes
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
           else
-            echo "No trades.csv file found"
+            git commit -m "Bot: Update trades - $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+            git push
           fi
 
       - name: Upload logs as artifact
