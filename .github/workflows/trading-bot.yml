@@ -41,7 +41,7 @@ jobs:
           IQ_MODE: ${{ secrets.IQ_MODE }}
         run: |
           python bot_v1.4.py
-        timeout-minutes: 8
+        timeout-minutes: 12
 
       - name: Commit and push trades
         if: always()  # รันแม้ว่า bot จะ fail
