@@ -16,6 +16,8 @@ jobs:
   trade:
     runs-on: ubuntu-latest
     timeout-minutes: 12  # จำกัดแต่ละรันไม่เกิน 12 นาที (bot runs 11 min)
+    permissions:
+      contents: write  # อนุญาตให้ push กลับมาที่ repo
 
     steps:
       - name: Checkout repository
