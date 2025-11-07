@@ -1,0 +1,18 @@
+# Systemd service file for bot-trade
+# Install to: /etc/systemd/system/bot-trade.service
+
+[Unit]
+Description=Bot Trade - Trading Bot Service
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=YOUR_USERNAME
+WorkingDirectory=/path/to/bot-trade/deploy
+ExecStart=/usr/bin/docker compose run --rm trading-bot
+StandardOutput=append:/var/log/bot-trade/bot.log
+StandardError=append:/var/log/bot-trade/bot-error.log
+
+[Install]
+WantedBy=multi-user.target

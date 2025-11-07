@@ -1,0 +1,21 @@
+# Systemd service file for bot-trade dashboard
+# Install to: /etc/systemd/system/bot-trade-dashboard.service
+
+[Unit]
+Description=Bot Trade - Dashboard Service
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=YOUR_USERNAME
+WorkingDirectory=/path/to/bot-trade/deploy
+ExecStart=/usr/bin/docker compose up dashboard
+ExecStop=/usr/bin/docker compose down
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/bot-trade/dashboard.log
+StandardError=append:/var/log/bot-trade/dashboard-error.log
+
+[Install]
+WantedBy=multi-user.target

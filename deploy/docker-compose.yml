@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # Trading Bot Service
+  trading-bot:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.bot
+    container_name: bot-trade-trading
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - TRADES_FILE=/app/data/trades.csv
+    volumes:
+      - trades-data:/app/data
+      - ../versions:/app/versions:ro
+    networks:
+      - bot-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Run bot on schedule (using cron in container or external scheduler)
+    # For now, it will run once and exit. Use external cron or k8s CronJob for scheduling
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Dashboard Service
+  dashboard:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.dashboard
+    container_name: bot-trade-dashboard
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - TRADES_FILE=/app/data/trades.csv
+    volumes:
+      - trades-data:/app/data
+      - ../versions:/app/versions:ro
+      - ../test_results:/app/test_results:ro
+      - ../.streamlit:/app/.streamlit:ro
+    ports:
+      - "8501:8501"
+    networks:
+      - bot-network
+    depends_on:
+      - trading-bot
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Nginx Reverse Proxy (optional)
+  nginx:
+    image: nginx:alpine
+    container_name: bot-trade-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - bot-network
+    depends_on:
+      - dashboard
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+
+volumes:
+  trades-data:
+    driver: local
+
+networks:
+  bot-network:
+    driver: bridge

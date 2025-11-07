@@ -1,0 +1,60 @@
+version: '3.8'
+
+# Development environment with hot-reload and debugging
+
+services:
+  # Trading Bot Service (Development)
+  trading-bot:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.bot
+    container_name: bot-trade-trading-dev
+    env_file:
+      - .env
+    environment:
+      - TRADES_FILE=/app/data/trades.csv
+      - DEBUG=true
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - trades-data:/app/data
+      - ../bot_v1.4.py:/app/bot_v1.4.py:ro
+      - ../versions:/app/versions:ro
+    networks:
+      - bot-network
+    # Override CMD for development (manual run)
+    command: tail -f /dev/null
+
+  # Dashboard Service (Development with hot-reload)
+  dashboard:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.dashboard
+    container_name: bot-trade-dashboard-dev
+    env_file:
+      - .env
+    environment:
+      - TRADES_FILE=/app/data/trades.csv
+      - DEBUG=true
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - trades-data:/app/data
+      - ../dashboard.py:/app/dashboard.py
+      - ../versions:/app/versions:ro
+      - ../test_results:/app/test_results:ro
+      - ../.streamlit:/app/.streamlit:ro
+    ports:
+      - "8501:8501"
+    networks:
+      - bot-network
+    depends_on:
+      - trading-bot
+    # Enable hot-reload for development
+    command: streamlit run dashboard.py --server.port=8501 --server.address=0.0.0.0 --server.runOnSave=true
+
+volumes:
+  trades-data:
+    driver: local
+
+networks:
+  bot-network:
+    driver: bridge
