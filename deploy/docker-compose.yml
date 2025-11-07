@@ -1,13 +1,13 @@
 version: '3.8'
 
 services:
-  # Trading Bot Service
+  # Trading Bot Service (Continuous Mode - 24/7)
   trading-bot:
     build:
       context: ..
       dockerfile: deploy/Dockerfile.bot
     container_name: bot-trade-trading
-    restart: unless-stopped
+    restart: always  # Auto-restart if crashed
     env_file:
       - .env
     environment:
@@ -17,13 +17,13 @@ services:
       - ../versions:/app/versions:ro
     networks:
       - bot-network
+    # Run in continuous mode (24/7)
+    command: ["python", "bot_v1.4.py", "--continuous"]
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-    # Run bot on schedule (using cron in container or external scheduler)
-    # For now, it will run once and exit. Use external cron or k8s CronJob for scheduling
     deploy:
       resources:
         limits:

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Trade Bot V1.4 - GitHub Actions Edition
-Lightweight bot designed to run on GitHub Actions (max 11 min per run)
+Trade Bot V1.4 - Continuous Trading Edition
+Lightweight bot that can run continuously or scheduled
 
 Features:
 - Checks all enabled currency pairs for signals
-- Executes trades on IQ Option (Practice account)
+- Executes trades on IQ Option (Practice/Real account)
 - Saves results to trades.csv
-- Designed for scheduled runs (every 30 minutes)
+- Supports both continuous (24/7) and scheduled modes
 """
 
 import os
@@ -17,6 +17,8 @@ import json
 import pandas as pd
 import numpy as np
 import logging
+import signal
+import argparse
 from datetime import datetime, timedelta
 
 # Setup logging
@@ -46,12 +48,13 @@ except ImportError:
 
 
 class TradeBotV14:
-    """Lightweight Trading Bot for GitHub Actions"""
+    """Lightweight Trading Bot supporting continuous and scheduled modes"""
 
     def __init__(self):
         """Initialize bot"""
         self.config = self.load_config()
         self.api = None
+        self.shutdown_requested = False
 
         # Load credentials from environment
         self.email = os.getenv("IQ_EMAIL")
@@ -61,7 +64,17 @@ class TradeBotV14:
         if not self.email or not self.password:
             raise ValueError("IQ_EMAIL and IQ_PASSWORD must be set in environment")
 
+        # Setup signal handlers for graceful shutdown
+        signal.signal(signal.SIGINT, self._signal_handler)
+        signal.signal(signal.SIGTERM, self._signal_handler)
+
         logger.info(f"✅ Bot initialized in {self.mode} mode")
+
+    def _signal_handler(self, signum, frame):
+        """Handle shutdown signals gracefully"""
+        signal_name = "SIGINT" if signum == signal.SIGINT else "SIGTERM"
+        logger.info(f"\n⚠️  Received {signal_name}, shutting down gracefully...")
+        self.shutdown_requested = True
 
     def load_config(self):
         """Load config from versions/v1.4/config.json"""
@@ -353,7 +366,10 @@ class TradeBotV14:
             current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
             elapsed = int(time.time() - start_time)
 
-            # Check if we should stop (approaching timeout)
+            # Check if we should stop (approaching timeout or shutdown requested)
+            if self.shutdown_requested:
+                logger.info(f"\n🛑 Shutdown requested, stopping gracefully")
+                break
             if elapsed >= max_runtime:
                 logger.info(f"\n⏱️  Reached max runtime ({max_runtime/60:.1f} min), stopping gracefully")
                 break
@@ -406,14 +422,126 @@ class TradeBotV14:
         logger.info(f"Final balance: ${self.api.get_balance():.2f}")
         logger.info("=" * 60)
 
+    def run_continuous(self):
+        """Run bot in continuous mode (24/7)"""
+        logger.info("=" * 60)
+        logger.info("🤖 Trade Bot V1.4 Starting (CONTINUOUS MODE)")
+        logger.info("=" * 60)
+
+        # Connect
+        if not self.connect():
+            return
+
+        # Get enabled pairs
+        enabled_pairs = {
+            pair: config
+            for pair, config in self.config['currencies'].items()
+            if config.get('enabled', False)
+        }
+
+        logger.info(f"✅ Enabled pairs: {', '.join(enabled_pairs.keys())}")
+        logger.info(f"⏰ Start time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
+        logger.info(f"🔄 Continuous monitoring: checking signals every 30 seconds")
+        logger.info(f"♾️  Running 24/7 until stopped (Ctrl+C or SIGTERM)")
+
+        trades_executed = 0
+        start_time = time.time()
+        check_interval = 30  # Check every 30 seconds
+        iteration = 0
+
+        # Infinite loop for 24/7 operation
+        while not self.shutdown_requested:
+            iteration += 1
+            current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+            elapsed = int(time.time() - start_time)
+
+            logger.info(f"\n{'='*60}")
+            logger.info(f"🔄 Iteration #{iteration} - {current_time} UTC (Uptime: {elapsed//3600}h {(elapsed%3600)//60}m)")
+            logger.info(f"{'='*60}")
+
+            # Check each pair
+            for pair, pair_config in enabled_pairs.items():
+                if self.shutdown_requested:
+                    break
+
+                try:
+                    logger.info(f"\n🔍 Checking {pair}...")
+
+                    # Generate signal
+                    signal = self.generate_signal(pair, pair_config)
+
+                    if signal:
+                        logger.info(f"🔔 Signal detected: {signal['signal'].upper()}")
+
+                        # Execute trade
+                        trade = self.execute_trade(signal)
+
+                        if trade:
+                            self.save_trade(trade)
+                            trades_executed += 1
+                            logger.info(f"✅ Trade #{trades_executed} executed successfully")
+                    else:
+                        logger.info(f"⏭️  No signal for {pair}")
+
+                except Exception as e:
+                    logger.error(f"❌ Error processing {pair}: {e}")
+                    continue
+
+            # Break if shutdown requested
+            if self.shutdown_requested:
+                break
+
+            # Wait before next check
+            logger.info(f"\n💤 Waiting {check_interval}s before next check...")
+
+            # Sleep in small intervals to allow quick shutdown
+            for _ in range(check_interval):
+                if self.shutdown_requested:
+                    break
+                time.sleep(1)
+
+        # Summary
+        logger.info("\n" + "=" * 60)
+        logger.info("📊 Session Summary")
+        logger.info("=" * 60)
+        logger.info(f"Total iterations: {iteration}")
+        logger.info(f"Trades executed: {trades_executed}")
+        logger.info(f"Total uptime: {int(time.time() - start_time)}s ({(time.time() - start_time)/3600:.2f} hours)")
+        logger.info(f"Final balance: ${self.api.get_balance():.2f}")
+        logger.info("=" * 60)
+        logger.info("👋 Bot stopped gracefully")
+
 
 def main():
     """Main entry point"""
+    parser = argparse.ArgumentParser(
+        description='Trade Bot V1.4 - Binary Options Trading Bot'
+    )
+    parser.add_argument(
+        '--continuous',
+        action='store_true',
+        help='Run in continuous mode (24/7). Default: scheduled mode (11 min)'
+    )
+
+    args = parser.parse_args()
+
     try:
         bot = TradeBotV14()
-        bot.run()
+
+        if args.continuous:
+            logger.info("🚀 Starting in CONTINUOUS mode (24/7)")
+            bot.run_continuous()
+        else:
+            logger.info("🚀 Starting in SCHEDULED mode (11 min)")
+            bot.run()
+
+    except KeyboardInterrupt:
+        logger.info("\n⚠️  Interrupted by user")
+        sys.exit(0)
     except Exception as e:
         logger.error(f"\n❌ Fatal error: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 

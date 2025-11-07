@@ -42,6 +42,11 @@ Save (Ctrl+X, Y, Enter)
 ./scripts/start.sh
 ```
 
+**Bot now runs continuously (24/7):**
+- ✅ Checks signals every 30 seconds
+- ✅ Auto-restarts if crashed
+- ✅ Trades only during configured sessions
+
 ### Step 5: Access Dashboard
 
 Open browser: `http://your-server-ip:8501`
@@ -72,15 +77,28 @@ Open browser: `http://your-server-ip:8501`
 
 ---
 
-## Setup Automated Trading
+## Bot Operation Modes
 
+### Continuous Mode (Default - Recommended for Dedicated Servers)
+
+**Already enabled by default!** The bot runs 24/7 in Docker:
+- ✅ Always monitoring (every 30 seconds)
+- ✅ Auto-restarts if crashed
+- ✅ No cron needed
+
+View status:
+```bash
+./scripts/status.sh
+```
+
+### Scheduled Mode (Optional - For GitHub Actions)
+
+Use cron if you want scheduled runs instead:
 ```bash
 ./scripts/setup-cron.sh
 ```
 
-This will run the bot automatically:
-- **Every 30 minutes (24/7)** - Bot checks conditions internally
-- Only trades during configured sessions (EURUSD, EURUSD-OTC, EURCAD)
+**See [CONTINUOUS_MODE.md](CONTINUOUS_MODE.md) for detailed information.**
 
 ---
 
