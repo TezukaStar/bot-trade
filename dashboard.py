@@ -187,25 +187,49 @@ def load_trades():
 
         return pd.DataFrame(), "⚠️ NO TEST DATA"
     else:
-        # โหมด live - อ่านจาก trades.csv
-        live_file = "trades.csv"
-        if os.path.exists(live_file):
-            df = pd.read_csv(live_file)
+        # โหมด live - อ่านจาก GitHub raw URL (real-time)
+        # URL format: https://raw.githubusercontent.com/USERNAME/REPO/BRANCH/FILE
+        github_url = "https://raw.githubusercontent.com/TezukaStar/bot-trade/main/trades.csv"
+
+        df = pd.DataFrame()
+        data_loaded = False
+
+        # ลอง 1: ดึงจาก GitHub (real-time)
+        try:
+            df = pd.read_csv(github_url)
             if not df.empty:
-                # รองรับทั้ง format เก่า (time, direction) และ format ใหม่ (entry_time, signal)
-                if 'entry_time' in df.columns and 'time' not in df.columns:
-                    df['time'] = pd.to_datetime(df['entry_time'])
-                else:
-                    df['time'] = pd.to_datetime(df['time'])
+                data_loaded = True
+        except:
+            pass
 
-                if 'signal' in df.columns and 'direction' not in df.columns:
-                    df['direction'] = df['signal']
+        # ลอง 2: ถ้าดึงจาก GitHub ไม่สำเร็จ ให้อ่านจาก local file (fallback)
+        if not data_loaded:
+            live_file = "trades.csv"
+            if os.path.exists(live_file):
+                try:
+                    df = pd.read_csv(live_file)
+                    if not df.empty:
+                        data_loaded = True
+                except:
+                    pass
 
-                # สร้าง trade_id ถ้ายังไม่มี
-                if 'trade_id' not in df.columns:
-                    df['trade_id'] = [f"trade_{i:03d}" for i in range(len(df))]
+        # ประมวลผลข้อมูล
+        if data_loaded and not df.empty:
+            # รองรับทั้ง format เก่า (time, direction) และ format ใหม่ (entry_time, signal)
+            if 'entry_time' in df.columns and 'time' not in df.columns:
+                df['time'] = pd.to_datetime(df['entry_time'])
+            else:
+                df['time'] = pd.to_datetime(df['time'])
 
-                return df, "🔴 LIVE BOT"
+            if 'signal' in df.columns and 'direction' not in df.columns:
+                df['direction'] = df['signal']
+
+            # สร้าง trade_id ถ้ายังไม่มี
+            if 'trade_id' not in df.columns:
+                df['trade_id'] = [f"trade_{i:03d}" for i in range(len(df))]
+
+            return df, "🔴 LIVE BOT"
+
         return pd.DataFrame(), "⚠️ NO LIVE DATA"
 
 @st.cache_data(ttl=10)
@@ -230,22 +254,48 @@ def load_config():
 
 def get_bot_status():
     """
-    เช็คสถานะของ bot จากไฟล์ trades.csv
+    เช็คสถานะของ bot จากข้อมูล trades
 
     Returns:
-        - 🟢 Active: เทรดภายใน 5 นาทีที่ผ่านมา (เพิ่งเทรดไป)
+        - 🟢 Active: เทรดภายใน 30 นาทีที่ผ่านมา
         - 🟡 Waiting: รอสัญญาณ หรือ นอกช่วงเวลาเทรด
-        - ⚪ No Data: ยังไม่มีข้อมูลเทรด (ยังไม่เคยเทรดเลย)
+        - ⚪ No Data: ยังไม่มีข้อมูลเทรด
     """
-    if os.path.exists("trades.csv"):
-        mod_time = os.path.getmtime("trades.csv")
-        diff = datetime.now().timestamp() - mod_time
-        minutes_ago = int(diff / 60)
+    # ลองดึงข้อมูลจาก GitHub
+    try:
+        github_url = "https://raw.githubusercontent.com/TezukaStar/bot-trade/main/trades.csv"
+        df = pd.read_csv(github_url)
+        if not df.empty and 'time' in df.columns:
+            # หาเทรดล่าสุด
+            df['time'] = pd.to_datetime(df['time'])
+            last_trade_time = df['time'].max()
+            now = pd.Timestamp.now(tz='UTC').tz_localize(None)
+            diff = (now - last_trade_time).total_seconds()
+            minutes_ago = int(diff / 60)
 
-        if diff < 300:  # น้อยกว่า 5 นาที
-            return f"🟢 Active (เทรดล่าสุด {minutes_ago} นาทีที่แล้ว)", "success"
-        else:
-            return f"🟡 Waiting (รอสัญญาณมา {minutes_ago} นาที)", "warning"
+            if diff < 1800:  # น้อยกว่า 30 นาที
+                return f"🟢 Active (เทรดล่าสุด {minutes_ago} นาที)", "success"
+            else:
+                return f"🟡 Waiting (เทรดล่าสุด {minutes_ago} นาที)", "warning"
+    except Exception as e:
+        # ถ้าดึงจาก GitHub ไม่ได้ ลอง local file
+        if os.path.exists("trades.csv"):
+            try:
+                df = pd.read_csv("trades.csv")
+                if not df.empty and 'time' in df.columns:
+                    df['time'] = pd.to_datetime(df['time'])
+                    last_trade_time = df['time'].max()
+                    now = pd.Timestamp.now(tz='UTC').tz_localize(None)
+                    diff = (now - last_trade_time).total_seconds()
+                    minutes_ago = int(diff / 60)
+
+                    if diff < 1800:
+                        return f"🟢 Active (เทรดล่าสุด {minutes_ago} นาที)", "success"
+                    else:
+                        return f"🟡 Waiting (เทรดล่าสุด {minutes_ago} นาที)", "warning"
+            except:
+                pass
+
     return "⚪ No Data (ยังไม่มีข้อมูลเทรด)", "info"
 
 # Header
