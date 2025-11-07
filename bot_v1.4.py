@@ -406,6 +406,14 @@ class TradeBotV14:
         logger.info(f"Final balance: ${self.api.get_balance():.2f}")
         logger.info("=" * 60)
 
+        # บันทึกเวลารันล่าสุด (สำหรับ dashboard)
+        try:
+            with open('last_run.txt', 'w') as f:
+                f.write(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+            logger.info("✅ Saved last run time")
+        except Exception as e:
+            logger.warning(f"⚠️  Failed to save last run time: {e}")
+
 
 def main():
     """Main entry point"""
