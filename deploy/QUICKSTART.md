@@ -79,8 +79,8 @@ Open browser: `http://your-server-ip:8501`
 ```
 
 This will run the bot automatically:
-- **PUT Session:** 12:00-13:59 UTC
-- **CALL Session:** 18:00-18:59 UTC
+- **Every 30 minutes (24/7)** - Bot checks conditions internally
+- Only trades during configured sessions (EURUSD, EURUSD-OTC, EURCAD)
 
 ---
 

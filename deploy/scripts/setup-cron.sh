@@ -32,13 +32,11 @@ CRON_FILE="/tmp/bot-trade-cron"
 
 cat > "$CRON_FILE" << EOF
 # Bot Trade - Automated Trading Schedule
-# Runs during premium sessions (high win rate)
+# Runs every 30 minutes (24/7)
+# Bot will check trading_hours and session_filters internally
 
-# PUT Session: 12:00-13:59 UTC (every 30 minutes)
-0,30 12-13 * * * $SCRIPT_DIR/run-bot.sh >> $DEPLOY_DIR/cron.log 2>&1
-
-# CALL Session: 18:00-18:59 UTC (every 30 minutes)
-0,30 18 * * * $SCRIPT_DIR/run-bot.sh >> $DEPLOY_DIR/cron.log 2>&1
+# Run every 30 minutes
+*/30 * * * * $SCRIPT_DIR/run-bot.sh >> $DEPLOY_DIR/cron.log 2>&1
 
 # Optional: Daily cleanup of old logs (keep last 7 days)
 0 0 * * * find $DEPLOY_DIR -name "*.log" -mtime +7 -delete

@@ -6,15 +6,9 @@ Description=Bot Trade - Trading Schedule Timer
 Requires=bot-trade.service
 
 [Timer]
-# PUT Session: 12:00, 12:30, 13:00, 13:30 UTC
-OnCalendar=*-*-* 12:00:00
-OnCalendar=*-*-* 12:30:00
-OnCalendar=*-*-* 13:00:00
-OnCalendar=*-*-* 13:30:00
-
-# CALL Session: 18:00, 18:30 UTC
-OnCalendar=*-*-* 18:00:00
-OnCalendar=*-*-* 18:30:00
+# Run every 30 minutes (24/7)
+# Bot will check trading_hours and session_filters internally
+OnCalendar=*:0/30
 
 # Run on boot if missed
 Persistent=true

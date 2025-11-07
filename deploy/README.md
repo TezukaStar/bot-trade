@@ -198,8 +198,8 @@ Setup automated trading schedule using cron.
 ```
 
 This will run the bot:
-- **PUT Sessions:** 12:00-13:59 UTC (every 30 min)
-- **CALL Sessions:** 18:00-18:59 UTC (every 30 min)
+- **Every 30 minutes (24/7)** - Bot checks trading_hours and session_filters internally
+- Only trades when conditions match config (EURUSD, EURUSD-OTC, EURCAD sessions)
 
 ---
 
@@ -341,11 +341,9 @@ crontab -e
 Add:
 
 ```cron
-# PUT Session: 12:00-13:59 UTC
-0,30 12-13 * * * cd /path/to/bot-trade/deploy && docker compose run --rm trading-bot >> cron.log 2>&1
-
-# CALL Session: 18:00-18:59 UTC
-0,30 18 * * * cd /path/to/bot-trade/deploy && docker compose run --rm trading-bot >> cron.log 2>&1
+# Run every 30 minutes (24/7)
+# Bot checks trading_hours and session_filters internally
+*/30 * * * * cd /path/to/bot-trade/deploy && docker compose run --rm trading-bot >> cron.log 2>&1
 ```
 
 ### Using Systemd Timer (Alternative)
@@ -373,7 +371,8 @@ Create `/etc/systemd/system/bot-trade.timer`:
 Description=Bot Trade Trading Schedule
 
 [Timer]
-OnCalendar=*-*-* 12,12:30,13,13:30,18,18:30:00
+# Run every 30 minutes (24/7)
+OnCalendar=*:0/30
 Persistent=true
 
 [Install]
