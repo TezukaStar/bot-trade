@@ -339,11 +339,11 @@ class TradeBotV14:
         logger.info(f"✅ Enabled pairs: {', '.join(enabled_pairs.keys())}")
         logger.info(f"⏰ Start time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
         logger.info(f"🔄 Continuous monitoring: checking signals every 30 seconds")
-        logger.info(f"⏱️  Will run for ~7 minutes (GitHub Actions timeout: 8 min)")
+        logger.info(f"⏱️  Will run for ~10 minutes (max 20 iterations)")
 
         trades_executed = 0
         start_time = time.time()
-        max_runtime = 7 * 60  # 7 minutes (leave 1 min buffer)
+        max_runtime = 10 * 60  # 10 minutes (optimized for 6 runs/day = 1,800 min/month)
         check_interval = 30  # Check every 30 seconds
 
         # Continuous monitoring loop
