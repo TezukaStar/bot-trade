@@ -316,7 +316,7 @@ class TradeBotV14:
         logger.info(f"💾 Saved trade to trades.csv")
 
     def run(self):
-        """Main bot execution (single run for GitHub Actions)"""
+        """Main bot execution (continuous monitoring for GitHub Actions)"""
         logger.info("=" * 60)
         logger.info("🤖 Trade Bot V1.4 Starting...")
         logger.info("=" * 60)
@@ -333,39 +333,72 @@ class TradeBotV14:
         }
 
         logger.info(f"✅ Enabled pairs: {', '.join(enabled_pairs.keys())}")
-        logger.info(f"⏰ Current time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
+        logger.info(f"⏰ Start time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
+        logger.info(f"🔄 Continuous monitoring: checking signals every 30 seconds")
+        logger.info(f"⏱️  Will run for ~7 minutes (GitHub Actions timeout: 8 min)")
 
         trades_executed = 0
+        start_time = time.time()
+        max_runtime = 7 * 60  # 7 minutes (leave 1 min buffer)
+        check_interval = 30  # Check every 30 seconds
 
-        # Check each pair
-        for pair, pair_config in enabled_pairs.items():
-            try:
-                logger.info(f"\n🔍 Checking {pair}...")
+        # Continuous monitoring loop
+        iteration = 0
+        while True:
+            iteration += 1
+            current_time = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+            elapsed = int(time.time() - start_time)
 
-                # Generate signal
-                signal = self.generate_signal(pair, pair_config)
+            # Check if we should stop (approaching timeout)
+            if elapsed >= max_runtime:
+                logger.info(f"\n⏱️  Reached max runtime ({max_runtime/60:.1f} min), stopping gracefully")
+                break
 
-                if signal:
-                    logger.info(f"🔔 Signal detected: {signal['signal'].upper()}")
+            logger.info(f"\n{'='*60}")
+            logger.info(f"🔄 Iteration #{iteration} - {current_time} UTC (Elapsed: {elapsed}s)")
+            logger.info(f"{'='*60}")
 
-                    # Execute trade
-                    trade = self.execute_trade(signal)
+            # Check each pair
+            for pair, pair_config in enabled_pairs.items():
+                try:
+                    logger.info(f"\n🔍 Checking {pair}...")
 
-                    if trade:
-                        self.save_trade(trade)
-                        trades_executed += 1
-                else:
-                    logger.info(f"⏭️  No signal for {pair}")
+                    # Generate signal
+                    signal = self.generate_signal(pair, pair_config)
 
-            except Exception as e:
-                logger.error(f"❌ Error processing {pair}: {e}")
-                continue
+                    if signal:
+                        logger.info(f"🔔 Signal detected: {signal['signal'].upper()}")
+
+                        # Execute trade
+                        trade = self.execute_trade(signal)
+
+                        if trade:
+                            self.save_trade(trade)
+                            trades_executed += 1
+                            logger.info(f"✅ Trade #{trades_executed} executed successfully")
+                    else:
+                        logger.info(f"⏭️  No signal for {pair}")
+
+                except Exception as e:
+                    logger.error(f"❌ Error processing {pair}: {e}")
+                    continue
+
+            # Wait before next check (unless we're close to timeout)
+            remaining = max_runtime - (time.time() - start_time)
+            if remaining > check_interval:
+                logger.info(f"\n💤 Waiting {check_interval}s before next check... (Remaining: {int(remaining)}s)")
+                time.sleep(check_interval)
+            else:
+                logger.info(f"\n⏱️  Less than {check_interval}s remaining, stopping")
+                break
 
         # Summary
         logger.info("\n" + "=" * 60)
         logger.info("📊 Run Summary")
         logger.info("=" * 60)
+        logger.info(f"Total iterations: {iteration}")
         logger.info(f"Trades executed: {trades_executed}")
+        logger.info(f"Total runtime: {int(time.time() - start_time)}s ({(time.time() - start_time)/60:.1f} min)")
         logger.info(f"Final balance: ${self.api.get_balance():.2f}")
         logger.info("=" * 60)
 
