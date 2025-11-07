@@ -1,15 +1,13 @@
 name: Trading Bot V1.4
 
 on:
-  # รันทุก 30 นาที (เฉพาะช่วงเวลาที่ bot ควรเทรด)
+  # รันทุก 30 นาที (เฉพาะช่วง Premium - win rate สูง)
   schedule:
-    # 12:00-13:59 UTC (PUT session for EURUSD-OTC)
+    # 12:00-13:59 UTC (19:00-20:59 ICT) - PUT session EURUSD-OTC - 73% win rate
     - cron: '0,30 12-13 * * *'
-    # 18:00-18:59 UTC (CALL session for EURUSD-OTC)
+    # 18:00-18:59 UTC (01:00-01:59 ICT) - CALL session EURUSD-OTC - 60% win rate
     - cron: '0,30 18 * * *'
-    # 19:00-02:59 UTC (EURUSD and EURCAD sessions)
-    - cron: '0,30 19-23 * * *'
-    - cron: '0,30 0-2 * * *'
+    # Total: 6 runs/day × 11 min = 66 min/day = 1,980 min/month (within free tier!)
 
   # Manual trigger
   workflow_dispatch:
@@ -17,7 +15,7 @@ on:
 jobs:
   trade:
     runs-on: ubuntu-latest
-    timeout-minutes: 10  # จำกัดแต่ละรันไม่เกิน 10 นาที
+    timeout-minutes: 12  # จำกัดแต่ละรันไม่เกิน 12 นาที (bot runs 11 min)
 
     steps:
       - name: Checkout repository
