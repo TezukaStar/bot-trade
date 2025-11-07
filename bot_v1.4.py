@@ -179,7 +179,7 @@ class TradeBotV14:
         return None
 
     def generate_signal(self, pair, pair_config):
-        """Generate trading signal"""
+        """Generate trading signal (using completed candles only, like backtester)"""
         # Check trading hours
         if not self.check_trading_hours(pair_config):
             return None
@@ -197,8 +197,11 @@ class TradeBotV14:
         # Calculate indicators
         df = self.calculate_indicators(df, pair_config)
 
-        # Get latest values
-        latest = df.iloc[-1]
+        # ⚠️ IMPORTANT: Use completed candle only (like backtester)
+        # df.iloc[-1] = current candle (may not be closed yet)
+        # df.iloc[-2] = previous candle (definitely closed)
+        # This matches backtester logic: use candles_df.iloc[i-50:i]
+        latest = df.iloc[-2]  # Use completed candle
         ind = pair_config.get('indicators', self.config['default_indicators'])
 
         # Check indicators
@@ -226,7 +229,7 @@ class TradeBotV14:
         return {
             'pair': pair,
             'signal': signal,
-            'price': latest['close'],
+            'price': latest['close'],  # Entry price at close of completed candle
             'adx': latest['adx'],
             'macd': latest['macd'],
             'rsi': latest['rsi'],
@@ -276,12 +279,13 @@ class TradeBotV14:
                 outcome = "loss"
                 logger.info(f"❌ Trade LOST - Loss: ${amount:.2f}")
 
-            # Create trade record
+            # Create trade record (matching backtester format)
             trade_record = {
                 'trade_id': trade_id,
                 'time': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'),
                 'pair': pair,
                 'direction': direction,
+                'entry_price': signal['price'],  # Entry price from signal
                 'result': outcome,
                 'profit': profit,
                 'capital': self.api.get_balance(),
