@@ -7,7 +7,6 @@ numpy>=1.24.0
 # IQ Option API (optional for dashboard-only deployment)
 # Install from GitHub since PyPI version may be outdated
 git+https://github.com/iqoptionapi/iqoptionapi.git
-websocket-client>=1.6.0
 
 # Configuration
 python-dotenv>=1.0.0
