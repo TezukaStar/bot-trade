@@ -15,7 +15,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import json
 import numpy as np
@@ -278,7 +278,7 @@ with col3:
         st.warning(f"**{data_source}**")
 
 with col4:
-    if st.button("🔄 รีเฟรช", use_container_width=True):
+    if st.button("🔄 รีเฟรช", width='stretch'):
         st.cache_data.clear()
         st.rerun()
 
@@ -492,7 +492,7 @@ def render_charts(df, metrics_dict, pair_name="All Pairs"):
             height=350
         )
 
-        st.plotly_chart(fig_pie, use_container_width=True)
+        st.plotly_chart(fig_pie, width='stretch')
 
     with col2:
         # Equity Curve
@@ -528,7 +528,7 @@ def render_charts(df, metrics_dict, pair_name="All Pairs"):
             hovermode='x unified'
         )
 
-        st.plotly_chart(fig_equity, use_container_width=True)
+        st.plotly_chart(fig_equity, width='stretch')
 
 # Helper function to render trade list with pagination
 def render_trade_list(df, tab_key=""):
@@ -1060,7 +1060,7 @@ if 'selected_trade_id' in st.session_state:
                     margin=dict(l=50, r=50, t=50, b=50)
                 )
 
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
                 # Signal analysis
                 st.markdown("### 🎯 การวิเคราะห์สัญญาณ")
