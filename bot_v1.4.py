@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Trade Bot V1.4 - GitHub Actions Edition
-Lightweight bot designed to run on GitHub Actions (max 10 min per run)
+Lightweight bot designed to run on GitHub Actions (max 11 min per run)
 
 Features:
 - Checks all enabled currency pairs for signals
@@ -339,11 +339,11 @@ class TradeBotV14:
         logger.info(f"✅ Enabled pairs: {', '.join(enabled_pairs.keys())}")
         logger.info(f"⏰ Start time: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
         logger.info(f"🔄 Continuous monitoring: checking signals every 30 seconds")
-        logger.info(f"⏱️  Will run for ~10 minutes (max 20 iterations)")
+        logger.info(f"⏱️  Will run for ~11 minutes (max 22 iterations)")
 
         trades_executed = 0
         start_time = time.time()
-        max_runtime = 10 * 60  # 10 minutes (optimized for 6 runs/day = 1,800 min/month)
+        max_runtime = 11 * 60  # 11 minutes (optimized for 6 runs/day = 1,980 min/month)
         check_interval = 30  # Check every 30 seconds
 
         # Continuous monitoring loop

@@ -7,7 +7,7 @@ on:
     - cron: '0,30 12-13 * * *'
     # 18:00-18:59 UTC (01:00-01:59 ICT) - CALL session EURUSD-OTC - 60% win rate
     - cron: '0,30 18 * * *'
-    # Total: 6 runs/day × 10 min = 60 min/day = 1,800 min/month (within free tier!)
+    # Total: 6 runs/day × 11 min = 66 min/day = 1,980 min/month (within free tier!)
 
   # Manual trigger
   workflow_dispatch:
@@ -15,7 +15,7 @@ on:
 jobs:
   trade:
     runs-on: ubuntu-latest
-    timeout-minutes: 10  # จำกัดแต่ละรันไม่เกิน 10 นาที
+    timeout-minutes: 12  # จำกัดแต่ละรันไม่เกิน 12 นาที (bot runs 11 min)
 
     steps:
       - name: Checkout repository
